@@ -1,6 +1,6 @@
 # Loxberry Plugin: P1 Decrypter
 
-Dieses Plugin ermöglicht es verschlüsselte Daten von einem Smart Meter über die Kundenschnittstelle P1 an den Miniserver über UDP und/oder an einen seriellen Port am Loxberry zu senden.
+Dieses Plugin ermöglicht es verschlüsselte Daten von einem Smart Meter über die Kundenschnittstelle P1 zu entschlüssen und an den Miniserver über UDP und/oder an einen seriellen Port am Loxberry zu senden.
 
 > English readme: [https://github.com/metrophos/LoxBerry-Plugin-P1-Decrypter/blob/main/README.md](https://github.com/metrophos/LoxBerry-Plugin-P1-Decrypter/blob/main/README.md)
 
