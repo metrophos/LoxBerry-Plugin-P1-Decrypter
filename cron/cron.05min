@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# This is a sample cron file. According to it's name it will go to
+# ~/system/cron/cron.10min. You may also let your Pluginscript create a
+# symbolic link dynamically in ~/system/cron/cron.10min which links to your
+# cron-script instead (which is prefered). Use NAME from
+# /data/system/plugindatabase.dat in that case as scriptname! Otherwise the
+# cron script will not be uninstalled cleanly.
+
+# Will be executed as user "loxberry".
+
+if ! pgrep -f p1decrypter.py >/dev/null && [ -e REPLACELBPBINDIR/p1decrypter.py ]
+then
+  /usr/bin/python3 REPLACELBPBINDIR/p1decrypter.py KEY --logfile=REPLACELBPLOGDIR/p1decrypter.log --configfile=REPLACELBPCONFIGDIR/p1decrypter.cfg >> REPLACELBPLOGDIR/p1decrypter.log 2>&1
+fi

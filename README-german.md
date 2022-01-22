@@ -1,21 +1,23 @@
 # Loxberry Plugin: P1 Decrypter
 
-Plugin to decrypt Smart Meter output over P1 customer interface and send it over udp and/or to a serial port.
+Dieses Plugin ermöglicht es verschlüsselte Daten von einem Smart Meter über die Kundenschnittstelle P1 an den Miniserver über UDP und/oder an einen seriellen Port am Loxberry zu senden.
 
-> German readme: [https://github.com/metrophos/LoxBerry-Plugin-P1-Decrypter/blob/main/README-german.md](https://github.com/metrophos/LoxBerry-Plugin-P1-Decrypter/blob/main/README-german.md)
+> English readme: [https://github.com/metrophos/LoxBerry-Plugin-P1-Decrypter/blob/main/README.md](https://github.com/metrophos/LoxBerry-Plugin-P1-Decrypter/blob/main/README.md)
 
 <img src="https://raw.githubusercontent.com/metrophos/LoxBerry-Plugin-P1-Decrypter/assets/p1decrypter-plugin.png" alt="P1 Decrypter Plugin"/>
 
-## Precondition
+## Voraussetzung
 
-- Smart Meter that has a P1 interface (Tested with Smart Meter: Sagemcom T210-D-r in Austria)
-- FTDI USB cable to connect to the Smart Meter
-  - One possibly option: [https://www.aliexpress.com/item/32945225256.html](https://www.aliexpress.com/item/32945225256.html)
-- Your energy provider has to activate your customer interface and provide the encryption key _"Global Unicast Encryption Key (GUEK)"_
+- Smart Meter mit P1 Schnittstelle (Aktuell wurde das Plugin getestet mit dem Smart Meter: Sagemcom T210-D-r in Österreich)
+- FTDI USB Kabel zum verbinden des Smart Meter mit Loxberry. 
+  - Zum Beispiel: [https://www.aliexpress.com/item/32945225256.html](https://www.aliexpress.com/item/32945225256.html)
+- Der Netzbetreiber muss die Kundenschnittstelle aktivieren und einen Key _"Global Unicast Encryption Key (GUEK)"_ zur Verfügung stellen
+  - Normalerweise kann über die Weboberfläche des Netzbetreibers die Kundenschnittstelle aktiviert und der Key angezeigt werden
+  - Das Aktivieren über die Weboberfläche des Netzbetreibers kann etwas Zeit in Anspruch nehmen
 
 ## Smart Meter
 
-### T210-D-r (Austria)
+### T210-D-r (Österreich)
 
 <img src="https://raw.githubusercontent.com/metrophos/LoxBerry-Plugin-P1-Decrypter/assets/Sagemcom-T210-D-r.png" alt="Sagemcom T210-D-r"/>
 
@@ -42,36 +44,37 @@ Plugin to decrypt Smart Meter output over P1 customer interface and send it over
 
 ## Value mapping
 
-If you don't need all informations of your smart meter you can use the value mapping.
-Format is: 
+Das value mapping reduziert die information welche vom Smart Meter kommen.
+
+Format ist: 
 ```
 'label','regex'
 'label','regex'
 'label','regex'
 ...
 ```
+> Das value mapping kann mittels `raw` switch deaktiviert werden.
 
-> Disable value mapping by enable `raw` switch.
+### Beispiel
 
-### Example
+Um folgenden Wert `1-0:1.8.0:001234567` vom Original output `1-0:1.8.0(001234567*Wh)` zu erhalten
+kann das value mapping wie folgt aussehen: `'1-0:1.8.0','(?<=1-0:1.8.0\().*?(?=\*Wh)'`
 
-To get `1-0:1.8.0:001234567\n` from raw output `1-0:1.8.0(001234567*Wh)`use value mapping like this: `'1-0:1.8.0','(?<=1-0:1.8.0\().*?(?=\*Wh)'`
+## Miniserver Konfiguration
 
-## Miniserver configuration
+- Virtueller UPD Eingang:
+  - Senderadresse: Deine Loxberry IP
+  - UPD Empfangsport: 54321 (Bzw. welcher im Plugin konfiguiert wurde)
+- Virtueller UPD Einfang Befehl:
+  - Befehlserkennung (Wenn die Daten wie im Value Mapping Beispiel geschickt werden): `\i1-0:1.8.0:\i\v`
 
-- Virtual UPD input:
-  - IP address: Your Loxberry IP
-  - UPD Port: 54321 (or what you use configured over the plugin configuration)
-- Virtual UPD input command:
-  - command recognition (If you use the value mapping example above): `\i1-0:1.8.0:\i\v`
+### Beispiel für den Energiemonitor
 
-### Example to use by energy monitor
-
-- In this example all values are in Watt. They have to be divide `AI1/1000`
-- In this example `1-0:1.7.0` and `1-0:2.7.0` must be connected by this formula `(I1-I2)/1000`
+- Die Werte kommen im Beispiel in Watt und müssen noch in Kilowatt umgerechnet werden `AI1/1000`
+- Im Beispiel muss der Wert `1-0:1.7.0` und `1-0:2.7.0` mit folgender Formel verbunden werden `(I1-I2)/1000`
 
 <img src="https://raw.githubusercontent.com/metrophos/LoxBerry-Plugin-P1-Decrypter/assets/loxone1.png" alt="Loxone"/>
 
-## Thanks to:
+## Danke an:
 
-- tknaller - For his modified fork: https://github.com/tknaller/smarty_dsmr_proxy
+- tknaller - Für seinen modifizierten fork: https://github.com/tknaller/smarty_dsmr_proxy

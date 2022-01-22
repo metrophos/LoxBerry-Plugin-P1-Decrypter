@@ -1,0 +1,167 @@
+<form method="post" name="p1decrypterform" action="./index.cgi">
+    <table>
+        <col style="width:15%">
+        <col style="width:85%">
+        <tr>
+            <td>Status</td>
+            <td>
+                <TMPL_VAR PID>
+            </td>
+        </tr>
+        <tr>
+            <td>Enable Plugin</td>
+            <td>
+                <TMPL_VAR ENABLED>
+            </td>
+        </tr>
+        <tr>
+            <td>Key</td>
+            <td>
+                <TMPL_VAR KEY>
+                    <span class="hint">Global Unicast Encryption Key (GUEK)</span>
+            </td>
+        </tr>
+        <tr>
+            <td>Value Mapping</td>
+            <td>
+                <TMPL_VAR MAPPING>
+                    <span class="hint">Value mapping of Smart Meter output. Only one per line <i>'label','regex'</i></span>
+            </td>
+        </tr>
+        <tr>
+            <td>Miniserver</td>
+            <td>
+                <TMPL_VAR MINISERVER_ID>
+            </td>
+        </tr>
+        <tr>
+            <td>Miniserver UDP-Port</td>
+            <td>
+                <TMPL_VAR UDP_PORT>
+            </td>
+        </tr>
+        <tr>
+            <td>SEND_TO_UDP</td>
+            <td>
+                <TMPL_VAR SEND_TO_UDP>
+            </td>
+        </tr>
+        <tr>
+            <td><h2>Advanced Options</h2></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Serial Input Port</td>
+            <td>
+                <TMPL_VAR SERIAL_INPUT_PORT>
+            </td>
+        </tr>
+        <tr>
+            <td>Serial Input Baudrate</td>
+            <td>
+                <TMPL_VAR SERIAL_INPUT_BAUDRATE>
+            </td>
+        </tr>
+        <tr>
+            <td>Serial Input Parity</td>
+            <td>
+                <TMPL_VAR SERIAL_INPUT_PARITY>
+            </td>
+        </tr>
+        <tr>
+            <td>Serial Input Stopbits</td>
+            <td>
+                <TMPL_VAR SERIAL_INPUT_STOPBITS>
+            </td>
+        </tr>
+        <tr>
+            <td>Additional Authenticated Data</td>
+            <td>
+                <TMPL_VAR AAD>
+            </td>
+        </tr>
+        <tr>
+            <td>UDP Host</td>
+            <td>
+                <TMPL_VAR UDP_HOST>
+                    <span class="hint">If set, this option overrules the Miniserver as host</span>
+            </td>
+        </tr>
+        <tr>
+            <td>Send To Serial Port</td>
+            <td>
+                <TMPL_VAR SEND_TO_SERIAL_PORT>
+                    <p class="hint">
+                        P1 Decrypter will send data to specified output serial port.
+                        Generating virtual serial port example: <i>socat -d -d pty,raw,echo=0,link=/dev/p1decrypter pty,raw,echo=0,link=/dev/smartmeter/p1decrypter</i>
+                    </p>
+            </td>
+        </tr>
+        <tr>
+            <td>Serial Output Port</td>
+            <td>
+                <TMPL_VAR SERIAL_OUTPUT_PORT>
+            </td>
+        </tr>
+        <tr>
+            <td>Serial Output Baudrate</td>
+            <td>
+                <TMPL_VAR SERIAL_OUTPUT_BAUDRATE>
+            </td>
+        </tr>
+        <tr>
+            <td>Serial Output Parity</td>
+            <td>
+                <TMPL_VAR SERIAL_OUTPUT_PARITY>
+            </td>
+        </tr>
+        <tr>
+            <td>Serial Output Stopbits</td>
+            <td>
+                <TMPL_VAR SERIAL_OUTPUT_STOPBITS>
+            </td>
+        </tr>
+        <tr>
+            <td>Raw</td>
+            <td>
+                <TMPL_VAR RAW>
+                    <p class="hint">
+                        Disable mapping and send encrypted Smart Meter output directly
+                    </p>
+            </td>
+        </tr>
+        <tr>
+            <td>Verbose</td>
+            <td>
+                <TMPL_VAR VERBOSE>
+            </td>
+        </tr>
+        <tr>
+            <td>&nbsp</td>
+            <td>
+                <div style="display:flex;align-items:center;justify-content:center;">
+                    <input name="action" type="submit" value="Save & Restart">
+                    <input name="action" type="submit" value="Reset default configruation" onclick="setReset()">
+                </div>
+            </td>
+        </tr>
+    </table>
+</form>
+
+<script>
+    // Add some attributes PERL::CGI doesn't provide
+    $('select[name=enabled]').attr('data-role', 'flipswitch');
+    $('select[name=send_to_udp]').attr('data-role', 'flipswitch');
+    $('select[name=send_to_serial_port]').attr('data-role', 'flipswitch');
+    $('select[name=raw]').attr('data-role', 'flipswitch');
+    $('select[name=verbose]').attr('data-role', 'flipswitch');
+
+    // Reset to default
+    let reset = false;
+    function setReset() {
+        reset = true;
+    }
+    document.p1decrypterform.onsubmit = function () {
+        return reset ? reset = false || confirm("Are you sure to revert your configation by default configuration") : true;
+    }
+</script>
