@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Bash script which is executed in case of an update (if this plugin is already
 # installed on the system). This script is executed as very last step (*AFTER*
@@ -61,15 +61,15 @@ PBIN=$LBPBIN/$PDIR
 #echo "<INFO> Plugin CONFIG folder is: $PCONFIG"
 
 echo "<INFO> Copy back existing config files"
-cp -v -r /tmp/$ARGV1/_upgrade/config/$ARGV3/* $ARGV5/config/plugins/$ARGV3/
+cp -v /tmp/$PTEMPDIR/_upgrade/config/p1decrypter.cfg $PCONFIG/p1decrypter.cfg
 
 # echo "<INFO> Adding new config parameters"
-# grep -q -F "VERBOSE=" $ARGV5/config/plugins/$ARGV3/p1decrypter.cfg || echo "VERBOSE=0" >> $ARGV5/config/plugins/$ARGV3/p1decrypter.cfg
-
-echo "<INFO> Copy back existing log files"
-cp -v -r /tmp/$ARGV1/_upgrade/log/$ARGV3/* $ARGV5/log/plugins/$ARGV3/
+# grep -q -F "VERBOSE=" $PCONFIG/p1decrypter.cfg || echo "VERBOSE=0" >> $PCONFIG/p1decrypter.cfg
 
 echo "<INFO> Remove temporary folders"
-rm -rf /tmp/$ARGV1/_upgrade
+rm -rf /tmp/$PTEMPDIR/_upgrade
+
+echo "<INFO> Start P1 Decrypter"
+/bin/bash $PDIR/system/cron/cron.05min/p1decrypter > /dev/null 2>&1 &
 
 exit 0

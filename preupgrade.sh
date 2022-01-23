@@ -60,14 +60,13 @@ PBIN=$LBPBIN/$PDIR
 #echo "<INFO> Plugin Log folder (on RAMDISK!) is: $PLOG"
 #echo "<INFO> Plugin CONFIG folder is: $PCONFIG"
 
+echo "<INFO> Stop P1 Decrypter"
+pkill -9 -f p1decrypter.py
+
 echo "<INFO> Creating temporary folders for upgrading"
-mkdir -p /tmp/$ARGV1/_upgrade/config
-mkdir -p /tmp/$ARGV1/_upgrade/log
+mkdir -p /tmp/$PTEMPDIR/_upgrade/config
 
 echo "<INFO> Backup existing config files"
-cp -v -r $ARGV5/config/plugins/$ARGV3/ /tmp/$ARGV1/_upgrade/config
-
-echo "<INFO> Backup existing log files"
-cp -v -r $ARGV5/log/plugins/$ARGV3/ /tmp/$ARGV1/_upgrade/log
+cp -v $PCONFIG/p1decrypter.cfg /tmp/$PTEMPDIR/_upgrade/config/p1decrypter.cfg
 
 exit 0
