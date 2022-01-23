@@ -152,8 +152,14 @@ class P1decrypter:
 
         if self._args.verbose:
             logging.getLogger().setLevel(logging.DEBUG)
+            key = self._args.key
+            aad = self._args.aad
+            self._args.key = 'KEY_WILL_NOT_SHOWN_IN_LOGFILE'
+            self._args.aad = 'AAD_WILL_NOT_SHOWN_IN_LOGFILE'
+            logging.debug("Arguments: {0}".format(self._args))
+            self._args.key = key
+            self._args.aad = aad
 
-        logging.debug("Arguments: {0}".format(self._args))
         logging.info("Arguments and config processed")
 
         if self._args.enabled == "0":
@@ -207,6 +213,7 @@ class P1decrypter:
         hex_input = binascii.hexlify(self._connection.read())
 
         if self._state == self.STATE_IGNORING:
+            logging.debug("STATE_IGNORING: Wait for start byte, get: ({0})".format(hex_input))
             if hex_input == b'db':
                 logging.debug("STATE_IGNORING: Start byte has been detected: ({0})".format(hex_input))
                 self._state = self.STATE_STARTED
