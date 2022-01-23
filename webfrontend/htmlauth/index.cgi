@@ -104,7 +104,7 @@ $R::verbose = $p1decrypterCfg->param('P1DECRYPTER.VERBOSE');
 if ($R::action eq "Save & Restart" || $R::action eq "Reset default configruation") {
     if ($R::enabled eq "1") {
         qx(pkill -9 -f p1decrypter.py);
-        qx(/bin/sh $lbhomedir/system/cron/cron.05min/$plugindata->{PLUGINDB_NAME} > /dev/null 2>&1 &);
+        qx(/bin/bash $lbhomedir/system/cron/cron.05min/$plugindata->{PLUGINDB_NAME} $R::enabled > /dev/null 2>&1 &);
         sleep(2);
     }
     else {
