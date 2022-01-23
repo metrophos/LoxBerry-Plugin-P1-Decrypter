@@ -10,7 +10,7 @@ Dieses Plugin ermöglicht es verschlüsselte Daten von einem Smart Meter über d
 
 - Smart Meter mit P1 Schnittstelle (Aktuell wurde das Plugin getestet mit dem Smart Meter: Sagemcom T210-D-r in Österreich)
 - FTDI USB Kabel zum verbinden des Smart Meter mit Loxberry. 
-  - Zum Beispiel: [https://www.aliexpress.com/item/32945225256.html](https://www.aliexpress.com/item/32945225256.html)
+  - Zum Beispiel: [https://www.aliexpress.com/item/32945225256.html](https://www.aliexpress.com/item/32945225256.html) (Option/Color: Sagemcom XS210 -> Sagemcom T210-D-r)
 - Der Netzbetreiber muss die Kundenschnittstelle aktivieren und einen Key _"Global Unicast Encryption Key (GUEK)"_ zur Verfügung stellen
   - Normalerweise kann über die Weboberfläche des Netzbetreibers die Kundenschnittstelle aktiviert und der Key angezeigt werden
   - Das Aktivieren über die Weboberfläche des Netzbetreibers kann etwas Zeit in Anspruch nehmen

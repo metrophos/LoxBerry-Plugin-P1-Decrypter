@@ -10,7 +10,7 @@ Plugin to decrypt Smart Meter output over P1 customer interface and send it over
 
 - Smart Meter that has a P1 interface (Tested with Smart Meter: Sagemcom T210-D-r in Austria)
 - FTDI USB cable to connect to the Smart Meter
-  - One possibly option: [https://www.aliexpress.com/item/32945225256.html](https://www.aliexpress.com/item/32945225256.html)
+  - One possibly option: [https://www.aliexpress.com/item/32945225256.html](https://www.aliexpress.com/item/32945225256.html) (Option/Color: Sagemcom XS210 -> Sagemcom T210-D-r)
 - Your energy provider has to activate your customer interface and provide the encryption key _"Global Unicast Encryption Key (GUEK)"_
 
 ## Smart Meter
