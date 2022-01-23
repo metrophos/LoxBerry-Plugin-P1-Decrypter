@@ -67,6 +67,7 @@ kann das value mapping wie folgt aussehen: `'1-0:1.8.0','(?<=1-0:1.8.0\().*?(?=\
   - UPD Empfangsport: 54321 (Bzw. welcher im Plugin konfiguiert wurde)
 - Virtueller UPD Einfang Befehl:
   - Befehlserkennung (Wenn die Daten wie im Value Mapping Beispiel geschickt werden): `\i1-0:1.8.0:\i\v`
+> Zur Analyse der UPD Meldungen von Loxberry zum Miniserver benutze den _Loxone UPD Monitor_
 
 ### Beispiel für den Energiemonitor
 

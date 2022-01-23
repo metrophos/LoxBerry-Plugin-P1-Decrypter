@@ -64,6 +64,7 @@ To get `1-0:1.8.0:001234567\n` from raw output `1-0:1.8.0(001234567*Wh)`use valu
   - UPD Port: 54321 (or what you use configured over the plugin configuration)
 - Virtual UPD input command:
   - command recognition (If you use the value mapping example above): `\i1-0:1.8.0:\i\v`
+> To check incoming messages from Loxberry to Miniserver use _Loxone UPD monitor_
 
 ### Example to use by energy monitor
 
