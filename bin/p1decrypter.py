@@ -24,8 +24,7 @@ class P1decrypter:
         self.STATE_HAS_SEPARATOR = 6
         self.STATE_HAS_FRAME_COUNTER = 7
         self.STATE_HAS_PAYLOAD = 8
-        self.STATE_HAS_GCM_TAG = 9
-        self.STATE_DONE = 10
+        self.STATE_DONE = 9
 
         # Command line arguments
         self._args = {}
@@ -209,7 +208,7 @@ class P1decrypter:
 
         if self._state == self.STATE_IGNORING:
             if hex_input == b'db':
-                logging.debug("STATE_IGNORING: Start byte has been detected. ({0})".format(hex_input))
+                logging.debug("STATE_IGNORING: Start byte has been detected: ({0})".format(hex_input))
                 self._state = self.STATE_STARTED
                 self._buffer = b""
                 self._buffer_length = 1
@@ -223,60 +222,62 @@ class P1decrypter:
             else:
                 return
         elif self._state == self.STATE_STARTED:
-            logging.debug("STATE_HAS_SYSTEM_TITLE_LENGTH: Read length of system title. ({0})".format(hex_input))
             self._state = self.STATE_HAS_SYSTEM_TITLE_LENGTH
             self._system_title_length = int(hex_input, 16)
             self._buffer_length = self._buffer_length + 1
             self._next_state = 2 + self._system_title_length  # start bytes + system title length
+            logging.debug("STATE_STARTED: Length of system title: ({0})".format(self._system_title_length))
         elif self._state == self.STATE_HAS_SYSTEM_TITLE_LENGTH:
-            logging.debug("STATE_HAS_SYSTEM_TITLE_LENGTH: Read system title ({0})".format(hex_input))
             if self._buffer_length > self._next_state:
                 self._system_title += hex_input
                 self._state = self.STATE_HAS_SYSTEM_TITLE
                 self._next_state = self._next_state + 2  # read two more bytes
+                logging.debug("STATE_HAS_SYSTEM_TITLE_LENGTH: System title: ({0})".format(self._system_title))
             else:
                 self._system_title += hex_input
         elif self._state == self.STATE_HAS_SYSTEM_TITLE:
-            logging.debug("STATE_HAS_SYSTEM_TITLE: Read additional byte after system title. ({0})".format(hex_input))
             if hex_input == b'82':
                 self._next_state = self._next_state + 1
                 self._state = self.STATE_HAS_SYSTEM_TITLE_SUFFIX  # Ignore separator byte
+                logging.debug("STATE_HAS_SYSTEM_TITLE: Additional byte after system title: ({0})".format(hex_input))
             else:
-                logging.warning("Expected 0x82 separator byte not found, dropping frame ({0})".format(hex_input))
+                logging.warning("Expected 0x82 separator byte not found, dropping frame:")
+                logging.debug("Buffer ({0})".format(self._buffer))
                 self._state = self.STATE_IGNORING
         elif self._state == self.STATE_HAS_SYSTEM_TITLE_SUFFIX:
-            logging.debug("STATE_HAS_SYSTEM_TITLE_SUFFIX: Read length of remaining data. ({0})".format(hex_input))
             if self._buffer_length > self._next_state:
                 self._data_length_bytes += hex_input
                 self._data_length = int(self._data_length_bytes, 16)
                 self._state = self.STATE_HAS_DATA_LENGTH
+                logging.debug("STATE_HAS_SYSTEM_TITLE_SUFFIX: Length of remaining data: ({0})".format(self._data_length_bytes))
             else:
                 self._data_length_bytes += hex_input
         elif self._state == self.STATE_HAS_DATA_LENGTH:
-            logging.debug("STATE_HAS_DATA_LENGTH: Read additional byte after data. ({0})".format(hex_input))
+            logging.debug("STATE_HAS_DATA_LENGTH: Additional byte after data: ({0})".format(hex_input))
             self._state = self.STATE_HAS_SEPARATOR  # Ignore separator byte
             self._next_state = self._next_state + 1 + 4  # separator byte + 4 bytes for framecounter
         elif self._state == self.STATE_HAS_SEPARATOR:
-            logging.debug("STATE_HAS_DATA_LENGTH: Read frame counter. ({0})".format(hex_input))
             if self._buffer_length > self._next_state:
                 self._frame_counter += hex_input
                 self._state = self.STATE_HAS_FRAME_COUNTER
                 self._next_state = self._next_state + self._data_length - 17
+                logging.debug("STATE_HAS_DATA_LENGTH: Frame counter: ({0})".format(self._frame_counter))
             else:
                 self._frame_counter += hex_input
         elif self._state == self.STATE_HAS_FRAME_COUNTER:
-            logging.debug("STATE_HAS_FRAME_COUNTER: Read payload. ({0})".format(hex_input))
             if self._buffer_length > self._next_state:
                 self._payload += hex_input
                 self._state = self.STATE_HAS_PAYLOAD
                 self._next_state = self._next_state + 12
+                logging.debug("STATE_HAS_FRAME_COUNTER: Payload: ({0})".format(self._payload))
             else:
                 self._payload += hex_input
         elif self._state == self.STATE_HAS_PAYLOAD:
-            logging.debug("STATE_HAS_PAYLOAD: Switch back to STATE_IGNORING and wait for a new start byte. ({0})".format(hex_input))
             if self._buffer_length > self._next_state:
                 self._gcm_tag += hex_input
                 self._state = self.STATE_DONE
+                logging.debug("STATE_HAS_PAYLOAD: GCM Tag: {0}".format(self._gcm_tag))
+                logging.debug("STATE_HAS_PAYLOAD: Switch back to STATE_IGNORING and wait for a new telegram")
             else:
                 self._gcm_tag += hex_input
 
@@ -287,9 +288,8 @@ class P1decrypter:
             self.decrypt()
             self._state = self.STATE_IGNORING
 
-    #
     def decrypt(self):
-        logging.debug("Full telegram received, start decryption.")
+        logging.debug("Full telegram received, start decryption of: {0}".format(self._buffer))
 
         cipher = AES.new(
             binascii.unhexlify(self._args.key),
