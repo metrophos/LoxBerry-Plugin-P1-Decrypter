@@ -213,7 +213,7 @@ class P1decrypter:
         hex_input = binascii.hexlify(self._connection.read())
 
         if self._state == self.STATE_IGNORING:
-            logging.debug("STATE_IGNORING: Wait for start byte, get: ({0})".format(hex_input))
+            logging.debug("STATE_IGNORING: Wait for start byte, got: ({0})".format(hex_input))
             if hex_input == b'db':
                 logging.debug("STATE_IGNORING: Start byte has been detected: ({0})".format(hex_input))
                 self._state = self.STATE_STARTED
