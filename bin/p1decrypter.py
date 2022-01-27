@@ -9,6 +9,7 @@ import os
 import configparser
 import json
 import base64
+import paho.mqtt.client as mqtt
 from Cryptodome.Cipher import AES
 
 
@@ -49,6 +50,9 @@ class P1decrypter:
         self.LBSCONFIG = ""
         self.miniserver_id = ""
         self.general_json = {}
+        self.mqtt_use_gateway = False
+        self.mqtt_connected = False
+        self.mqtt_client = {}
 
     def main(self):
         self.args()
@@ -74,10 +78,20 @@ class P1decrypter:
         parser.add_argument('-a', '--aad', required=False, default="3000112233445566778899AABBCCDDEEFF",
                             help="Additional authenticated data. Default: 3000112233445566778899AABBCCDDEEFF")
 
-        parser.add_argument('-u', '--send-to-udp', required=False, default=True, action='store_true',
-                            help="Send data to UDP. Default: true")
+        parser.add_argument('-u', '--send-to-udp', required=False, default=False, action='store_true',
+                            help="Send data over UDP. Default: false")
         parser.add_argument('-ui', '--udp-host', help="UDP IP / Host")
-        parser.add_argument('-up', '--udp-port', type=int, help="UDP port")
+        parser.add_argument('-up', '--udp-port', type=int, help="UDP port. Default: 54321")
+
+        parser.add_argument('-q', '--send-mqtt', required=False, default=False, action='store_true',
+                            help="Send data over MQTT. Default: false")
+        parser.add_argument('-qb', '--mqtt-broker', help="MQTT Broker")
+        parser.add_argument('-qu', '--mqtt-broker-username', help="MQTT Broker Username")
+        parser.add_argument('-qw', '--mqtt-broker-password', help="MQTT Broker Password")
+        parser.add_argument('-qp', '--mqtt-broker-port', default="1883", type=int, help="MQTT port. Default: 1883")
+        parser.add_argument('-qt', '--mqtt-topic-prefix', default="p1decrypter",
+                            help="MQTT Topic prefix. Default: p1decrypter")
+        parser.add_argument('-qq', '--mqtt-topic-qos', type=int, default=1, help="MQTT QOS Default: 1")
 
         parser.add_argument('-s', '--send-to-serial-port', required=False, default=False, action='store_true',
                             help="Send data to output serial port. Use socat to generate virtual port e.g.: socat -d -d pty,raw,echo=0,link=/dev/p1decrypterI pty,raw,echo=0,link=/dev/p1decrypterO")
@@ -115,6 +129,8 @@ class P1decrypter:
                                 datefmt='%Y-%m-%d %H:%M:%S',
                                 handlers=[logging.StreamHandler()])
 
+        logging.info("Process arguments and config")
+
         if self._args.configfile:
             logging.info("Read config file and overwrite arguments")
             if not os.path.exists(self._args.configfile):
@@ -126,6 +142,7 @@ class P1decrypter:
 
             self.LBSCONFIG = os.getenv("LBSCONFIG", os.getcwd())
             self.miniserver_id = pluginconfig.get('P1DECRYPTER', 'MINISERVER_ID')
+            self.mqtt_use_gateway = bool(int(pluginconfig.get('P1DECRYPTER', 'MQTT_USE_GATEWAY')))
 
             self._args.enabled = bool(int(pluginconfig.get('P1DECRYPTER', 'ENABLED')))
             self._args.key = pluginconfig.get('P1DECRYPTER', 'KEY')
@@ -137,14 +154,25 @@ class P1decrypter:
                 pluginconfig.get('P1DECRYPTER', 'MAPPING').replace('\\n', '').encode('ascii')
             ).decode('ascii')
             self._args.aad = pluginconfig.get('P1DECRYPTER', 'AAD')
+
             self._args.send_to_udp = bool(int(pluginconfig.get('P1DECRYPTER', 'SEND_TO_UDP')))
             self._args.udp_host = pluginconfig.get('P1DECRYPTER', 'UDP_HOST')
             self._args.udp_port = int(pluginconfig.get('P1DECRYPTER', 'UDP_PORT'))
+
+            self._args.send_mqtt = bool(int(pluginconfig.get('P1DECRYPTER', 'SEND_MQTT')))
+            self._args.mqtt_broker = pluginconfig.get('P1DECRYPTER', 'MQTT_BROKER')
+            self._args.mqtt_broker_username = pluginconfig.get('P1DECRYPTER', 'MQTT_BROKER_USERNAME')
+            self._args.mqtt_broker_password = pluginconfig.get('P1DECRYPTER', 'MQTT_BROKER_PASSWORD')
+            self._args.mqtt_broker_port = int(pluginconfig.get('P1DECRYPTER', 'MQTT_BROKER_PORT'))
+            self._args.mqtt_topic_prefix = pluginconfig.get('P1DECRYPTER', 'MQTT_TOPIC_PREFIX')
+            self._args.mqtt_topic_qos = int(pluginconfig.get('P1DECRYPTER', 'MQTT_TOPIC_QOS'))
+
             self._args.send_to_serial_port = bool(int(pluginconfig.get('P1DECRYPTER', 'SEND_TO_SERIAL_PORT')))
             self._args.serial_output_port = pluginconfig.get('P1DECRYPTER', 'SERIAL_OUTPUT_PORT')
             self._args.serial_output_baudrate = int(pluginconfig.get('P1DECRYPTER', 'SERIAL_OUTPUT_BAUDRATE'))
             self._args.serial_output_parity = pluginconfig.get('P1DECRYPTER', 'SERIAL_OUTPUT_PARITY')
             self._args.serial_output_stopbits = int(pluginconfig.get('P1DECRYPTER', 'SERIAL_OUTPUT_STOPBITS'))
+
             self._args.raw = bool(int(pluginconfig.get('P1DECRYPTER', 'RAW')))
             self._args.verbose = bool(int(pluginconfig.get('P1DECRYPTER', 'VERBOSE')))
         else:
@@ -152,43 +180,66 @@ class P1decrypter:
 
         if self._args.verbose:
             logging.getLogger().setLevel(logging.DEBUG)
-            key = self._args.key
-            aad = self._args.aad
-            self._args.key = 'KEY_WILL_NOT_SHOWN_IN_LOGFILE'
-            self._args.aad = 'AAD_WILL_NOT_SHOWN_IN_LOGFILE'
-            logging.debug("Arguments: {0}".format(self._args))
-            self._args.key = key
-            self._args.aad = aad
-
-        logging.info("Arguments and config processed")
 
         if self._args.enabled == "0":
-            logging.warning("P1 Decrypter is not enabled in configuration file. exit")
+            logging.critical("P1 Decrypter is not enabled in configuration file. exit")
             sys.exit(-1)
 
-        self.miniserver()
+        if not self.mqtt_use_gateway and self._args.mqtt_broker == "" and self._args.send_mqtt:
+            logging.critical("No MQTT Broker defined. exit")
+            sys.exit(-1)
 
-    def miniserver(self):
+        self.loxberry()
 
-        if not self._args.udp_host and self._args.send_to_udp:
-            if not self.miniserver_id:
-                logging.error("No UDP Host or Miniserver ID is set.")
-                sys.exit(-1)
+    def loxberry(self):
 
+        set_udp = not self._args.udp_host and self._args.send_to_udp
+
+        if set_udp or self.mqtt_use_gateway:
             config_path = os.path.join(self.LBSCONFIG, "general.json")
             logging.info("Try load Miniserver system configuration file {0}".format(config_path))
             with open(config_path, "r") as config_path_handle:
                 self.general_json = json.load(config_path_handle)
 
+            # get miniserver ip
+            if set_udp and not self.miniserver_id:
+                logging.error("No UDP Host or Miniserver ID is set.")
+                sys.exit(-1)
+            else:
                 logging.info("Check if miniserver exists in {0}".format(config_path))
                 if not self.miniserver_id in self.general_json["Miniserver"].keys():
-                    logging.critical(
-                        "Miniserver with id {0} is not configured in {1}".format(self.miniserver_id, config_path))
+                    logging.critical("Miniserver with id {0} is not configured in {1}. exit"
+                                     .format(self.miniserver_id, config_path))
                     sys.exit(-1)
 
                 self._args.udp_host = self.general_json["Miniserver"][self.miniserver_id]["Ipaddress"]
-
                 logging.info("Miniserver ip address: {0}".format(self._args.udp_host))
+
+            # get mqtt settings
+            if self.mqtt_use_gateway:
+                logging.info("MQTT Gateway settings enabled")
+                if not "Mqtt" in self.general_json:
+                    logging.critical("MQTT Gateway settings not available. exit"
+                                     .format(self.miniserver_id, config_path))
+                    sys.exit(-1)
+
+                self._args.mqtt_broker = self.general_json["Mqtt"]["Brokerhost"]
+                self._args.mqtt_broker_username = self.general_json["Mqtt"]["Brokeruser"]
+                self._args.mqtt_broker_password = self.general_json["Mqtt"]["Brokerpass"]
+                self._args.mqtt_broker_port = int(self.general_json["Mqtt"]["Brokerport"])
+
+        # debug log of config
+        if self._args.verbose:
+            key = self._args.key
+            aad = self._args.aad
+            mqtt_broker_password = self._args.mqtt_broker_password
+            self._args.key = 'KEY_WILL_NOT_SHOWN_IN_LOGFILE'
+            self._args.aad = 'AAD_WILL_NOT_SHOWN_IN_LOGFILE'
+            self._args.mqtt_broker_password = 'PASSWORD_WILL_NOT_SHOWN_IN_LOGFILE'
+            logging.debug("Config processed: {0}".format(self._args))
+            self._args.key = key
+            self._args.aad = aad
+            self._args.mqtt_broker_password = mqtt_broker_password
 
         self.connect()
         logging.info("Start processing incoming data.")
@@ -206,7 +257,7 @@ class P1decrypter:
                 stopbits=self._args.serial_input_stopbits
             )
         except Exception as e:
-            logging.error("Connection failed: {0}".format(e))
+            logging.critical("Connection to serial input port failed: {0}. exit".format(e))
             sys.exit(-1)
 
     def process(self):
@@ -248,7 +299,7 @@ class P1decrypter:
                 self._state = self.STATE_HAS_SYSTEM_TITLE_SUFFIX  # Ignore separator byte
                 logging.debug("STATE_HAS_SYSTEM_TITLE: Additional byte after system title: ({0})".format(hex_input))
             else:
-                logging.warning("Expected 0x82 separator byte not found, dropping frame:")
+                logging.warning("Expected 0x82 separator byte not found, dropping frame")
                 logging.debug("Buffer ({0})".format(self._buffer))
                 self._state = self.STATE_IGNORING
         elif self._state == self.STATE_HAS_SYSTEM_TITLE_SUFFIX:
@@ -256,7 +307,8 @@ class P1decrypter:
                 self._data_length_bytes += hex_input
                 self._data_length = int(self._data_length_bytes, 16)
                 self._state = self.STATE_HAS_DATA_LENGTH
-                logging.debug("STATE_HAS_SYSTEM_TITLE_SUFFIX: Length of remaining data: ({0})".format(self._data_length_bytes))
+                logging.debug("STATE_HAS_SYSTEM_TITLE_SUFFIX: Length of remaining data: ({0})"
+                              .format(self._data_length_bytes))
             else:
                 self._data_length_bytes += hex_input
         elif self._state == self.STATE_HAS_DATA_LENGTH:
@@ -310,26 +362,34 @@ class P1decrypter:
     def mapping(self, decryption):
         logging.debug("Decryption done. Extract data by mapping configuration: {0}".format(decryption))
 
-        output = ""
+        decryption_decoded = decryption.decode()
+        mapped_values_string = ""
 
         if self._args.raw:
             logging.debug("Raw output is enabled. Mapping extraction stopped. Send complete telegram")
-            output = decryption;
+            mapped_values_string = decryption_decoded
+            mapped_values_array = decryption_decoded
         else:
             input_multi_array = []
+            mapped_values_array = []
             for i in self._args.mapping.splitlines():
                 input_multi_array.append([i.split(',')[0].strip().strip("'"), i.split(',')[1].strip().strip("'")])
 
             for i in input_multi_array:
-                output += i[0] + ":" + re.search(i[1], decryption.decode()).group(0) + "\n"
+                value = re.search(i[1], decryption_decoded).group(0)
+                mapped_values_string += i[0] + ":" + value + "\n"
+                mapped_values_array.append([i[0], value])
 
-            output = output.encode()
+            mapped_values_string = mapped_values_string
 
         if self._args.send_to_udp:
-            self.send_to_udb(output)
+            self.send_to_udb(mapped_values_string)
 
         if self._args.send_to_serial_port:
-            self.send_to_serial_port(output)
+            self.send_to_serial_port(mapped_values_string)
+
+        if self._args.send_mqtt:
+            self.send_mqtt(mapped_values_array)
 
     def send_to_serial_port(self, output):
         logging.debug("Send the decrypted data to output serial port: {0}".format(output.decode()))
@@ -339,17 +399,60 @@ class P1decrypter:
             parity=self._args.serial_output_parity,
             stopbits=self._args.serial_output_stopbits
         )
-        serial_port.write(output)
+        serial_port.write(output.encode())
         serial_port.close()
 
     def send_to_udb(self, output):
-        logging.debug("Send the decrypted data over udp: {0}".format(output.decode()))
+        logging.debug("Send the decrypted data over udp: {0}".format(output))
         connection = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        res = connection.sendto(output, (self._args.udp_host, self._args.udp_port))
+        res = connection.sendto(output.encode(), (self._args.udp_host, self._args.udp_port))
         connection.close()
 
-        if res != output.__len__():
-            logging.error("Sent bytes not matching. Expected {0} to be {1}".format(output.decode().__len__(), res))
+        if res != output.encode().__len__():
+            logging.error("Sent bytes not matching. Expected {0} to be {1}".format(output.__len__(), res))
+
+    def send_mqtt(self, output):
+        def get_mqtt_client():
+            if not self.mqtt_connected:
+                logging.info("Try to connect to MQTT Broker: {0}".format(self._args.mqtt_broker))
+                self.mqtt_connected = True
+
+                def on_connect(client, userdata, flags, rc):
+                    if rc == 0:
+                        logging.info("Connected to MQTT Broker: {0}".format(self._args.mqtt_broker))
+                    else:
+                        self.mqtt_connected = False
+                        logging.error("MQTT connection failed {0}".format(rc))
+
+                def on_disconnect():
+                    self.mqtt_connected = False
+                    logging.error("MQTT disconnected")
+
+                self.mqtt_client = mqtt.Client()
+                if self._args.mqtt_broker_username or self._args.mqtt_broker_password:
+                    self.mqtt_client.username_pw_set(self._args.mqtt_broker_username, self._args.mqtt_broker_password)
+                else:
+                    logging.info("MQTT Broker username and password not set")
+
+                self.mqtt_client.on_connect = on_connect
+                self.mqtt_client.on_disconnect = on_disconnect
+
+                self.mqtt_client.connect(self._args.mqtt_broker, self._args.mqtt_broker_port)
+                return self.mqtt_client
+            else:
+                return self.mqtt_client
+
+        mqtt_client = get_mqtt_client()
+        if self._args.raw:
+            logging.debug(
+                "Send decrypted data over mqtt: {0} -> {1}".format(self._args.mqtt_topic_prefix + "/raw", output))
+            mqtt_client.publish(self._args.mqtt_topic_prefix + "/raw", output, qos=self._args.mqtt_topic_qos)
+        else:
+            for i in output:
+                logging.debug(
+                    "Send decrypted data over mqtt: {0} -> {1}".format(self._args.mqtt_topic_prefix + "/" + i[0], i[1]))
+                mqtt_client.publish(self._args.mqtt_topic_prefix + "/" + i[0], i[1], qos=self._args.mqtt_topic_qos)
+        mqtt_client.loop()
 
 
 if __name__ == '__main__':
