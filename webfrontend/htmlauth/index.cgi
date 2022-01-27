@@ -40,6 +40,16 @@ if ($R::action eq "Save & Restart") {
     $p1decrypterCfg->param('P1DECRYPTER.AAD', $R::aad);
     $p1decrypterCfg->param('P1DECRYPTER.SEND_TO_UDP', $R::send_to_udp);
     $p1decrypterCfg->param('P1DECRYPTER.UDP_HOST', $R::udp_host);
+
+    $p1decrypterCfg->param('P1DECRYPTER.SEND_MQTT', $R::send_mqtt);
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_USE_GATEWAY', $R::mqtt_use_gateway);
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER', $R::mqtt_broker);
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_USERNAME', $R::mqtt_broker_username);
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_PASSWORD', $R::mqtt_broker_password);
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_PORT', $R::mqtt_broker_port);
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_TOPIC_PREFIX', $R::mqtt_topic_prefix);
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_TOPIC_QOS', $R::mqtt_topic_qos);
+
     $p1decrypterCfg->param('P1DECRYPTER.SEND_TO_SERIAL_PORT', $R::send_to_serial_port);
     $p1decrypterCfg->param('P1DECRYPTER.SERIAL_OUTPUT_PORT', $R::serial_output_port);
     $p1decrypterCfg->param('P1DECRYPTER.SERIAL_OUTPUT_BAUDRATE', $R::serial_output_baudrate);
@@ -66,6 +76,16 @@ if ($R::action eq "Reset default configruation") {
     $p1decrypterCfg->param('P1DECRYPTER.AAD', $p1decrypterDefaultCfg->param('P1DECRYPTER.AAD'));
     $p1decrypterCfg->param('P1DECRYPTER.SEND_TO_UDP', $p1decrypterDefaultCfg->param('P1DECRYPTER.SEND_TO_UDP'));
     $p1decrypterCfg->param('P1DECRYPTER.UDP_HOST', $p1decrypterDefaultCfg->param('P1DECRYPTER.UDP_HOST'));
+
+    $p1decrypterCfg->param('P1DECRYPTER.SEND_MQTT', $p1decrypterDefaultCfg->param('P1DECRYPTER.SEND_MQTT'));
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_USE_GATEWAY', $p1decrypterDefaultCfg->param('P1DECRYPTER.SEND_MQTT'));
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER', $p1decrypterDefaultCfg->param('P1DECRYPTER.MQTT_BROKER'));
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_USERNAME', $p1decrypterDefaultCfg->param('P1DECRYPTER.MQTT_BROKER_USERNAME'));
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_PASSWORD', $p1decrypterDefaultCfg->param('P1DECRYPTER.MQTT_BROKER_PASSWORD'));
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_PORT', $p1decrypterDefaultCfg->param('P1DECRYPTER.MQTT_BROKER_PORT'));
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_TOPIC_PREFIX', $p1decrypterDefaultCfg->param('P1DECRYPTER.MQTT_TOPIC_PREFIX'));
+    $p1decrypterCfg->param('P1DECRYPTER.MQTT_TOPIC_QOS', $p1decrypterDefaultCfg->param('P1DECRYPTER.MQTT_TOPIC_QOS'));
+
     $p1decrypterCfg->param('P1DECRYPTER.SEND_TO_SERIAL_PORT', $p1decrypterDefaultCfg->param('P1DECRYPTER.SEND_TO_SERIAL_PORT'));
     $p1decrypterCfg->param('P1DECRYPTER.SERIAL_OUTPUT_PORT', $p1decrypterDefaultCfg->param('P1DECRYPTER.SERIAL_OUTPUT_PORT'));
     $p1decrypterCfg->param('P1DECRYPTER.SERIAL_OUTPUT_BAUDRATE', $p1decrypterDefaultCfg->param('P1DECRYPTER.SERIAL_OUTPUT_BAUDRATE'));
@@ -92,6 +112,16 @@ $R::serial_input_stopbits = $p1decrypterCfg->param('P1DECRYPTER.SERIAL_INPUT_STO
 $R::aad = $p1decrypterCfg->param('P1DECRYPTER.AAD');
 $R::send_to_udp = $p1decrypterCfg->param('P1DECRYPTER.SEND_TO_UDP');
 $R::udp_host = $p1decrypterCfg->param('P1DECRYPTER.UDP_HOST');
+
+$R::send_mqtt = $p1decrypterCfg->param('P1DECRYPTER.SEND_MQTT');
+$R::mqtt_use_gateway = $p1decrypterCfg->param('P1DECRYPTER.MQTT_USE_GATEWAY');
+$R::mqtt_broker = $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER');
+$R::mqtt_broker_username = $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_USERNAME');
+$R::mqtt_broker_password = $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_PASSWORD');
+$R::mqtt_broker_port = $p1decrypterCfg->param('P1DECRYPTER.MQTT_BROKER_PORT');
+$R::mqtt_topic_prefix = $p1decrypterCfg->param('P1DECRYPTER.MQTT_TOPIC_PREFIX');
+$R::mqtt_topic_qos = $p1decrypterCfg->param('P1DECRYPTER.MQTT_TOPIC_QOS');
+
 $R::send_to_serial_port = $p1decrypterCfg->param('P1DECRYPTER.SEND_TO_SERIAL_PORT');
 $R::serial_output_port = $p1decrypterCfg->param('P1DECRYPTER.SERIAL_OUTPUT_PORT');
 $R::serial_output_baudrate = $p1decrypterCfg->param('P1DECRYPTER.SERIAL_OUTPUT_BAUDRATE');
@@ -177,6 +207,40 @@ $template->param(SEND_TO_UDP => $cgi->popup_menu(
 
 ## UDP_HOST textfield
 $template->param(UDP_HOST => $cgi->textfield(-name => 'udp_host', -default => $R::udp_host));
+
+## SEND_MQTT switch
+$template->param(SEND_MQTT => $cgi->popup_menu(
+    -name    => 'send_mqtt',
+    -values  => \@switch,
+    -labels  => \%switchLabels,
+    -default => $R::send_mqtt
+));
+
+## MQTT_USE_GATEWAY switch
+$template->param(MQTT_USE_GATEWAY => $cgi->popup_menu(
+    -name    => 'mqtt_use_gateway',
+    -values  => \@switch,
+    -labels  => \%switchLabels,
+    -default => $R::mqtt_use_gateway
+));
+
+## MQTT_BROKER textfield
+$template->param(MQTT_BROKER => $cgi->textfield(-name => 'mqtt_broker', -default => $R::mqtt_broker));
+
+## MQTT_BROKER_USERNAME textfield
+$template->param(MQTT_BROKER_USERNAME => $cgi->textfield(-name => 'mqtt_broker_username', -default => $R::mqtt_broker_username));
+
+## MQTT_BROKER_PASSWORD password field
+$template->param(MQTT_BROKER_PASSWORD => $cgi->password_field(-name => 'mqtt_broker_password', -default => $R::mqtt_broker_password));
+
+## MQTT_BROKER_PORT textfield
+$template->param(MQTT_BROKER_PORT => $cgi->textfield(-name => 'mqtt_broker_port', -default => $R::mqtt_broker_port));
+
+## MQTT_TOPIC_PREFIX textfield
+$template->param(MQTT_TOPIC_PREFIX => $cgi->textfield(-name => 'mqtt_topic_prefix', -default => $R::mqtt_topic_prefix));
+
+## MQTT_TOPIC_QOS textfield
+$template->param(MQTT_TOPIC_QOS => $cgi->textfield(-name => 'mqtt_topic_qos', -default => $R::mqtt_topic_qos));
 
 ## SEND_TO_SERIAL_PORT switch
 $template->param(SEND_TO_SERIAL_PORT => $cgi->popup_menu(

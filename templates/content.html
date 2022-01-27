@@ -25,7 +25,7 @@
             <td>Value Mapping</td>
             <td>
                 <TMPL_VAR MAPPING>
-                    <span class="hint">Value mapping of Smart Meter output. Only one per line <i>'label','regex'</i></span>
+                    <span class="hint">Value mapping of Smart Meter output. Only one per line: <i>'label','regex'</i></span>
             </td>
         </tr>
         <tr>
@@ -35,20 +35,7 @@
             </td>
         </tr>
         <tr>
-            <td>Miniserver UDP-Port</td>
-            <td>
-                <TMPL_VAR UDP_PORT>
-            </td>
-        </tr>
-        <tr>
-            <td>SEND_TO_UDP</td>
-            <td>
-                <TMPL_VAR SEND_TO_UDP>
-            </td>
-        </tr>
-        <tr>
-            <td><h2>Advanced Options</h2></td>
-            <td></td>
+            <td colspan="2"><h2>Advanced Options</h2></td>
         </tr>
         <tr>
             <td>Serial Input Port</td>
@@ -81,6 +68,39 @@
             </td>
         </tr>
         <tr>
+            <td>Raw</td>
+            <td>
+                <TMPL_VAR RAW>
+                    <p class="hint">
+                        Disable mapping and send encrypted Smart Meter output directly
+                    </p>
+            </td>
+        </tr>
+        <tr>
+            <td>Verbose</td>
+            <td>
+                <TMPL_VAR VERBOSE>
+                    <p class="hint">
+                        Advanced debug log
+                    </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><h3>UDP Options</h3></td>
+        </tr>
+        <tr>
+            <td>Send over UDP</td>
+            <td>
+                <TMPL_VAR SEND_TO_UDP>
+            </td>
+        </tr>
+        <tr>
+            <td>Miniserver UDP-Port</td>
+            <td>
+                <TMPL_VAR UDP_PORT>
+            </td>
+        </tr>
+        <tr>
             <td>UDP Host</td>
             <td>
                 <TMPL_VAR UDP_HOST>
@@ -88,11 +108,72 @@
             </td>
         </tr>
         <tr>
+            <td colspan="2"><h3>MQTT Options</h3></td>
+        </tr>
+        <tr>
+            <td>Send over MQTT</td>
+            <td>
+                <TMPL_VAR SEND_MQTT>
+                    <p class="hint">
+                        Send data as MQTT Messages
+                    </p>
+            </td>
+        </tr>
+        <tr>
+            <td>Use MQTT Gateway</td>
+            <td>
+                <TMPL_VAR MQTT_USE_GATEWAY>
+                    <p class="hint">
+                        Use MQTT Gateway Plugin configuration
+                    </p>
+            </td>
+        </tr>
+        <tr class="mqtt">
+            <td>MQTT Broker</td>
+            <td>
+                <TMPL_VAR MQTT_BROKER>
+            </td>
+        </tr>
+        <tr class="mqtt">
+            <td>MQTT Broker Username</td>
+            <td>
+                <TMPL_VAR MQTT_BROKER_USERNAME>
+            </td>
+        </tr>
+        <tr class="mqtt">
+            <td>MQTT Broker Password</td>
+            <td>
+                <TMPL_VAR MQTT_BROKER_PASSWORD>
+            </td>
+        </tr>
+        <tr class="mqtt">
+            <td>MQTT Port</td>
+            <td>
+                <TMPL_VAR MQTT_BROKER_PORT>
+            </td>
+        </tr>
+        <tr>
+            <td>MQTT Topic Prefix</td>
+            <td>
+                <TMPL_VAR MQTT_TOPIC_PREFIX>
+                    <p class="hint mqtt_topic_prefix"></p>
+            </td>
+        </tr>
+        <tr>
+            <td>MQTT Topic QOS</td>
+            <td>
+                <TMPL_VAR MQTT_TOPIC_QOS>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><h3>Serial Output Options</h3></td>
+        </tr>
+        <tr>
             <td>Send To Serial Port</td>
             <td>
                 <TMPL_VAR SEND_TO_SERIAL_PORT>
                     <p class="hint">
-                        P1 Decrypter will send data to specified output serial port.
+                        Send data to specified output serial port.
                         Generating virtual serial port example: <i>socat -d -d pty,raw,echo=0,link=/dev/p1decrypter pty,raw,echo=0,link=/dev/smartmeter/p1decrypter</i>
                     </p>
             </td>
@@ -122,21 +203,6 @@
             </td>
         </tr>
         <tr>
-            <td>Raw</td>
-            <td>
-                <TMPL_VAR RAW>
-                    <p class="hint">
-                        Disable mapping and send encrypted Smart Meter output directly
-                    </p>
-            </td>
-        </tr>
-        <tr>
-            <td>Verbose</td>
-            <td>
-                <TMPL_VAR VERBOSE>
-            </td>
-        </tr>
-        <tr>
             <td>&nbsp</td>
             <td>
                 <div style="display:flex;align-items:center;justify-content:center;">
@@ -155,6 +221,27 @@
     $('select[name=send_to_serial_port]').attr('data-role', 'flipswitch');
     $('select[name=raw]').attr('data-role', 'flipswitch');
     $('select[name=verbose]').attr('data-role', 'flipswitch');
+    $('select[name=send_mqtt]').attr('data-role', 'flipswitch');
+    $('select[name=mqtt_use_gateway]').attr('data-role', 'flipswitch');
+
+    if($('select[name=mqtt_use_gateway]').val() === '0') {
+        $('.mqtt').show();
+        $('.mqtt_topic_prefix').hide();
+    } else {
+        $('.mqtt').hide();
+        $('.mqtt_topic_prefix').text(`Please don't forget to add MQTT Subscriptions: ${$('input[name=mqtt_topic_prefix]').val()}/#`);
+        $('.mqtt_topic_prefix').show();
+    }
+    $('select[name=mqtt_use_gateway]').on('change', function() {
+        if($('select[name=mqtt_use_gateway]').val() === '0') {
+            $('.mqtt').show();
+            $('.mqtt_topic_prefix').hide();
+        } else {
+            $('.mqtt').hide();
+            $('.mqtt_topic_prefix').text(`Please don't forget to add MQTT Subscriptions: ${$('input[name=mqtt_topic_prefix]').val()}/#`);
+            $('.mqtt_topic_prefix').show();
+        }
+    });
 
     // Reset to default
     let reset = false;

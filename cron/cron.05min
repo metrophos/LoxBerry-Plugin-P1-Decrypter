@@ -9,9 +9,9 @@
 
 # Will be executed as user "loxberry".
 
-enabled=$(awk -F "=" '/ENABLED/ {print $2}' /opt/loxberry/config/plugins/p1decrypter/p1decrypter.cfg)
+enabled=$(awk -F "=" '/ENABLED/ {print $2}' REPLACELBPCONFIGDIR/p1decrypter.cfg)
 
-if ! pgrep -f p1decrypter.py >/dev/null && [[ $enabled == "1" || $1 == "1" ]] &&  [ -e /opt/loxberry/bin/plugins/p1decrypter/p1decrypter.py ]
+if ! pgrep -f p1decrypter.py >/dev/null && [[ $enabled == "1" || $1 == "1" ]] &&  [ -e REPLACELBPBINDIR/p1decrypter.py ]
 then
-  /usr/bin/python3 /opt/loxberry/bin/plugins/p1decrypter/p1decrypter.py KEY --logfile=/opt/loxberry/log/plugins/p1decrypter/p1decrypter.log --configfile=/opt/loxberry/config/plugins/p1decrypter/p1decrypter.cfg >> /opt/loxberry/log/plugins/p1decrypter/p1decrypter.log 2>&1
+  /usr/bin/python3 REPLACELBPBINDIR/p1decrypter.py KEY --logfile=REPLACELBPLOGDIR/p1decrypter.log --configfile=REPLACELBPCONFIGDIR/p1decrypter.cfg >> REPLACELBPLOGDIR/p1decrypter.log 2>&1
 fi

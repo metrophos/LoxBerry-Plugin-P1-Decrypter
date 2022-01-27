@@ -63,13 +63,17 @@ PBIN=$LBPBIN/$PDIR
 echo "<INFO> Copy back existing config files"
 cp -v /tmp/$PTEMPDIR/_upgrade/config/p1decrypter.cfg $PCONFIG/p1decrypter.cfg
 
-# echo "<INFO> Adding new config parameters"
-# grep -q -F "VERBOSE=" $PCONFIG/p1decrypter.cfg || echo "VERBOSE=0" >> $PCONFIG/p1decrypter.cfg
+echo "<INFO> Adding new config parameters"
+grep -q -F "SEND_MQTT=" $PCONFIG/p1decrypter.cfg || echo "SEND_MQTT=0" >> $PCONFIG/p1decrypter.cfg
+grep -q -F "MQTT_USE_GATEWAY=" $PCONFIG/p1decrypter.cfg || echo "MQTT_USE_GATEWAY=0" >> $PCONFIG/p1decrypter.cfg
+grep -q -F "MQTT_BROKER=" $PCONFIG/p1decrypter.cfg || echo "MQTT_BROKER=" >> $PCONFIG/p1decrypter.cfg
+grep -q -F "MQTT_BROKER_USERNAME=" $PCONFIG/p1decrypter.cfg || echo "MQTT_BROKER_USERNAME=" >> $PCONFIG/p1decrypter.cfg
+grep -q -F "MQTT_BROKER_PASSWORD=" $PCONFIG/p1decrypter.cfg || echo "MQTT_BROKER_PASSWORD=" >> $PCONFIG/p1decrypter.cfg
+grep -q -F "MQTT_BROKER_PORT=" $PCONFIG/p1decrypter.cfg || echo "MQTT_BROKER_PORT=1883" >> $PCONFIG/p1decrypter.cfg
+grep -q -F "MQTT_TOPIC_PREFIX=" $PCONFIG/p1decrypter.cfg || echo "MQTT_TOPIC_PREFIX=p1decrypter" >> $PCONFIG/p1decrypter.cfg
+grep -q -F "MQTT_TOPIC_QOS=" $PCONFIG/p1decrypter.cfg || echo "MQTT_TOPIC_QOS=1" >> $PCONFIG/p1decrypter.cfg
 
 echo "<INFO> Remove temporary folders"
 rm -rf /tmp/$PTEMPDIR/_upgrade
-
-echo "<INFO> Start P1 Decrypter"
-/bin/bash $PDIR/system/cron/cron.05min/p1decrypter > /dev/null 2>&1 &
 
 exit 0
