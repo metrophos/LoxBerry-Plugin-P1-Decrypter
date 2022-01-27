@@ -1,6 +1,6 @@
 # Loxberry Plugin: P1 Decrypter
 
-Plugin to decrypt Smart Meter output over P1 customer interface and send it over udp and/or to a serial port.
+Plugin to decrypt Smart Meter output over P1 customer interface and send it over UDP, MQTT and/or to a serial port.
 
 > German readme: [https://github.com/metrophos/LoxBerry-Plugin-P1-Decrypter/blob/main/README-german.md](https://github.com/metrophos/LoxBerry-Plugin-P1-Decrypter/blob/main/README-german.md)
 
