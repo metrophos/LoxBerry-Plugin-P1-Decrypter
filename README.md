@@ -75,4 +75,5 @@ To get `1-0:1.8.0:001234567\n` from raw output `1-0:1.8.0(001234567*Wh)`use valu
 
 ## Thanks to:
 
+- Noschvie - For his great loxforum support and technical support: https://github.com/Noschvie
 - tknaller - For his modified fork: https://github.com/tknaller/smarty_dsmr_proxy
