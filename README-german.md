@@ -78,5 +78,5 @@ kann das value mapping wie folgt aussehen: `'1-0:1.8.0','(?<=1-0:1.8.0\().*?(?=\
 
 ## Danke an:
 
-- Noschvie - Für die tolle Unterstützung im loxforum: https://github.com/Noschvie  
+- Noschvie - Für die tolle Hilfe im loxforum und die technische Unterstüzung: https://github.com/Noschvie  
 - tknaller - Für seinen modifizierten fork: https://github.com/tknaller/smarty_dsmr_proxy
